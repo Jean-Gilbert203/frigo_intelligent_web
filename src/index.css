@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@keyframes clignotement-fond {
+  0%, 100% { background-color: #dc2626; color: #ffffff; }
+  50% { background-color: #fee2e2; color: #7f1d1d; }
+}
+
+@keyframes clignotement-cadre {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+.alerte-clignotante {
+  background-color: #dc2626;
+  color: #ffffff;
+  animation: clignotement-fond 1s ease-in-out infinite;
+}
+
+.alerte-cadre {
+  animation: clignotement-cadre 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerte-clignotante,
+  .alerte-cadre {
+    animation: none;
+  }
+}
+
+.porte-frigo {
+  transition: transform 1s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .porte-frigo {
+    transition: none;
+  }
+}
