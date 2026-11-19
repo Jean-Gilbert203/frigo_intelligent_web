@@ -38,7 +38,7 @@ export default function PorteBarre({ porte, recuLe, occupe, alerte, onOuvrir, on
           <p className="font-semibold">{ouverte ? 'Porte ouverte' : 'Porte fermée'}</p>
           {ouverte && (
             <p className="text-sm">
-              Ouverte par {porte.nomUtilisateur} · <Chrono key={recuLe} depart={porte.dureeSecondes} />
+              <Chrono key={recuLe} depart={porte.dureeSecondes} />
             </p>
           )}
           {alerte && (

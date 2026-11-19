@@ -13,6 +13,7 @@ import useStocks from '../hooks/useStocks.js';
 import useTempsReel from '../hooks/useTempsReel.js';
 import { formaterDate } from '../utils/format.js';
 import FrigoPortes from '../components/FrigoPortes.jsx';
+import PanneauDemo from '../components/PanneauDemo.jsx';
 
 export default function FrigoPage() {
   const { utilisateur, quitter } = useUtilisateur();
@@ -22,6 +23,12 @@ export default function FrigoPage() {
 
   const [occupe, setOccupe] = useState(false);
   const [message, setMessage] = useState(null);
+  const [panneauDemo, setPanneauDemo] = useState(false);
+
+  // Triple clic sur le titre : ouvre le panneau caché de démonstration
+  const clicTitre = (evenement) => {
+    if (evenement.detail === 3) setPanneauDemo(true);
+  };
   const minuteur = useRef(null);
 
   const estAdmin = utilisateur.role === 'ADMIN';
@@ -47,8 +54,7 @@ export default function FrigoPage() {
     {
       '/topic/porte': () => rechargerPorte(),
       '/topic/stocks': () => rechargerStocks(),
-      [`/topic/notifications/${utilisateur.id}`]: (notification) =>
-        afficher('alerte', `${notification.titre} : ${notification.message}`),
+      
     },
     toutRecharger,
   );
@@ -120,7 +126,7 @@ export default function FrigoPage() {
       )}
 
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white shadow">
-        <h1 className="flex items-center gap-2 text-xl font-bold">
+        <h1 onClick={clicTitre} className="flex select-none items-center gap-2 text-xl font-bold">
           <Refrigerator size={24} /> Frigo intelligent
         </h1>
         <div className="flex items-center gap-3">
@@ -168,6 +174,7 @@ export default function FrigoPage() {
         </FrigoPortes>
       </main>
 
+      {panneauDemo && <PanneauDemo onFermer={() => setPanneauDemo(false)} />}
       <Bandeau message={message} />
     </div>
   );

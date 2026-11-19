@@ -1,7 +1,7 @@
 import { Refrigerator } from 'lucide-react';
 
 // Angle d'ouverture : 100° place les portes de chant sur les côtés, sans cacher le contenu
-const ANGLE_OUVERTURE = 100;
+const ANGLE_OUVERTURE = 90;
 
 function Porte({ cote, ouverte }) {
   const gauche = cote === 'gauche';
