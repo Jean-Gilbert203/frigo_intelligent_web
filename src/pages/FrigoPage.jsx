@@ -157,7 +157,7 @@ export default function FrigoPage() {
         {chargement && <p className="text-slate-500">Chargement du frigo…</p>}
         {erreur && <p className="rounded-xl bg-red-50 p-4 text-red-700">{erreur}</p>}
 
-        <FrigoPortes ouverte={porteOuverte}>
+        {/* <FrigoPortes ouverte={porteOuverte}> */}
           <div className="grid gap-4 md:grid-cols-2">
             {compartiments.map((compartiment) => (
               <CompartimentCarte
@@ -171,7 +171,7 @@ export default function FrigoPage() {
               />
             ))}
           </div>
-        </FrigoPortes>
+        {/* </FrigoPortes> */}
       </main>
 
       {panneauDemo && <PanneauDemo onFermer={() => setPanneauDemo(false)} />}

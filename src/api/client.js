@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { lireUtilisateurSauvegarde } from './session.js';
+import { lireIdentiteCourante } from './session.js';
 
 // Adresse du serveur : variable VITE_API_URL si elle existe, sinon la machine de la page, port 8082
 const adresse = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8082`;
@@ -10,7 +10,7 @@ export const urlImage = (chemin) => `${URL_SERVEUR}${chemin}`;
 const client = axios.create({ baseURL: URL_SERVEUR });
 
 client.interceptors.request.use((config) => {
-  const utilisateur = lireUtilisateurSauvegarde();
+  const utilisateur = lireIdentiteCourante();
   if (utilisateur) {
     config.headers['X-Utilisateur-Id'] = String(utilisateur.id);
   }

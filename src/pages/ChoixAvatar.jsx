@@ -70,11 +70,11 @@ export default function ChoixAvatar() {
               <UserRound size={40} />
             </span>
             <span className="text-lg font-semibold text-slate-800">{u.nom}</span>
-            {/* {u.role === 'ADMIN' && (
+            {u.role === 'ADMIN' && (
               <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                 <ShieldCheck size={14} /> Admin
               </span>
-            )} */}
+            )}
           </button>
         ))}
       </div>
