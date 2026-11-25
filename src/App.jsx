@@ -8,6 +8,12 @@ import useUtilisateur from './context/useUtilisateur.js';
 import { INTERFACE_PAR_DEFAUT } from './utils/interface.js';
 import Accueil from './admin/pages/Accueil.jsx';
 import Notifications from './admin/pages/Notifications.jsx';
+import Courses from './admin/pages/Courses.jsx';
+import Historique from './admin/pages/Historique.jsx';
+import Plus from './admin/pages/Plus.jsx';
+import AjouterStock from './admin/pages/AjouterStock.jsx';
+import Dictionnaire from './admin/pages/Dictionnaire.jsx';
+
 
 export default function App() {
   const { utilisateur, admin } = useUtilisateur();
@@ -32,9 +38,12 @@ export default function App() {
       >
         <Route index element={<Accueil />} />
         <Route path="notifications" element={<Notifications />} />
-        <Route path="courses" element={<Provisoire titre="Liste de courses" />} />
-        <Route path="ajouter" element={<Provisoire titre="Ajouter du stock" />} />
-        <Route path="plus" element={<Provisoire titre="Plus" />} />
+        <Route path="ajouter" element={<AjouterStock />} />
+        <Route path="courses" element={<Courses />} />
+        <Route path="plus" element={<Plus />} />
+        <Route path="historique" element={<Historique />} />
+        <Route path="dictionnaire" element={<Dictionnaire />} />
+        <Route path="magasins" element={<Provisoire titre="Magasins et GPS" />} />
       </Route>
 
       {/* Anciennes adresses : elles continuent de fonctionner */}

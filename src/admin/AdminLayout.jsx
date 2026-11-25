@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Bell, LayoutDashboard, LogOut, Menu, Plus, ShoppingCart } from 'lucide-react';
 import useTempsReel from '../hooks/useTempsReel.js';
 import useUtilisateur from '../context/useUtilisateur.js';
@@ -10,12 +10,18 @@ const ONGLETS = [
   { vers: '/admin/notifications', libelle: 'Alertes', icone: Bell },
   { vers: '/admin/courses', libelle: 'Courses', icone: ShoppingCart },
   { vers: '/admin/ajouter', libelle: 'Ajouter', icone: Plus },
-  { vers: '/admin/plus', libelle: 'Plus', icone: Menu },
+  {
+    vers: '/admin/plus',
+    libelle: 'Plus',
+    icone: Menu,
+    aussi: ['/admin/historique', '/admin/dictionnaire', '/admin/magasins'],
+  },
 ];
 
 export default function AdminLayout() {
   const { admin, deconnecterAdmin } = useUtilisateur();
   const notifications = useNotifications();
+  const { pathname } = useLocation();
 
   // Un compteur par canal : quand il change, l'écran concerné relit ses données
   const [versions, setVersions] = useState({ stocks: 0, porte: 0, courses: 0 });
@@ -61,16 +67,17 @@ export default function AdminLayout() {
 
       <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
         <ul className="mx-auto flex max-w-xl">
-          {ONGLETS.map(({ vers, libelle, icone: Icone, exact }) => (
+          {ONGLETS.map(({ vers, libelle, icone: Icone, exact, aussi }) => (
             <li key={vers} className="flex-1">
               <NavLink
                 to={vers}
                 end={exact}
-                className={({ isActive }) =>
-                  `flex flex-col items-center gap-0.5 py-2 text-xs ${
-                    isActive ? 'font-semibold text-sky-600' : 'text-slate-500'
-                  }`
-                }
+                className={({ isActive }) => {
+                  const actif = isActive || aussi?.some((p) => pathname.startsWith(p));
+                  return `flex flex-col items-center gap-0.5 py-2 text-xs ${
+                    actif ? 'font-semibold text-sky-600' : 'text-slate-500'
+                  }`;
+                }}
               >
                 <span className="relative">
                   <Icone size={22} />

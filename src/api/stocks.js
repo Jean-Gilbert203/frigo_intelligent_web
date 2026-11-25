@@ -9,3 +9,6 @@ export const consommer = (idAliment, quantite) =>
 
 // Réservé à l'administrateur
 export const jeterLot = (idLot) => client.delete(`/api/frigo/lots/${idLot}`);
+
+// Réservé à l'administrateur : { idDictionnaire, quantite, datePeremption, idCompartiment }
+export const ajouterStock = (ligne) => client.post('/api/frigo/ajouter', ligne).then((r) => r.data);
