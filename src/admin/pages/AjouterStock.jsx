@@ -50,6 +50,12 @@ export default function AjouterStock() {
     };
   }, [versions.stocks]);
 
+  useEffect(() => {
+    if (!bilan || bilan.enErreur > 0) return undefined;
+    const minuteur = setTimeout(() => setBilan(null), 6000);
+    return () => clearTimeout(minuteur);
+  }, [bilan]);
+
   const nombre = parseInt(quantite, 10) || 0;
   const compartiment = compartiments.find((c) => c.id === idCompartiment) ?? null;
 

@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Camera, ImagePlus, Minus, Plus } from 'lucide-react';
 import { messageErreur } from '../../api/client.js';
 import ImageAliment from '../../components/ImageAliment.jsx';
+import { reduireImage } from '../../utils/image.js';
 import { nomFichier } from '../../utils/texte.js';
 
 export default function FormulaireAliment({
@@ -22,15 +23,49 @@ export default function FormulaireAliment({
   const [seuil, setSeuil] = useState(String(aliment ? aliment.seuilMinimum : 1));
   const [image, setImage] = useState(aliment ? nomFichier(aliment.image) : '');
 
+  // La photo choisie (déjà réduite) et son aperçu
+  const [photo, setPhoto] = useState(null);
+  const [apercu, setApercu] = useState('');
+  const [erreurPhoto, setErreurPhoto] = useState('');
+  const refAppareil = useRef(null);
+  const refGalerie = useRef(null);
+
   // La création d'une catégorie, sans quitter le formulaire
   const [categorieOuverte, setCategorieOuverte] = useState(false);
   const [nomCategorie, setNomCategorie] = useState('');
   const [idCompartiment, setIdCompartiment] = useState(String(compartiments[0]?.id ?? ''));
   const [erreurCategorie, setErreurCategorie] = useState('');
 
+  // L'aperçu est libéré quand il change et à la fermeture du formulaire
+  useEffect(
+    () => () => {
+      if (apercu) URL.revokeObjectURL(apercu);
+    },
+    [apercu],
+  );
+
   const nombreSeuil = parseInt(seuil, 10);
   const seuilValide = !Number.isNaN(nombreSeuil) && nombreSeuil >= 0;
   const valide = idCategorie !== '' && seuilValide && (modification || nom.trim() !== '');
+
+  const choisirPhoto = async (evenement) => {
+    const fichier = evenement.target.files?.[0];
+    evenement.target.value = '';
+    if (!fichier) return;
+    setErreurPhoto('');
+    try {
+      const reduite = await reduireImage(fichier);
+      setPhoto(reduite);
+      setApercu(URL.createObjectURL(reduite));
+    } catch {
+      setErreurPhoto("Cette image n'a pas pu être lue. Essaie une autre photo.");
+    }
+  };
+
+  const retirerPhoto = () => {
+    setPhoto(null);
+    setApercu('');
+  };
 
   const soumettre = () =>
     onEnregistrer({
@@ -38,6 +73,7 @@ export default function FormulaireAliment({
       idCategorie: Number(idCategorie),
       seuilMinimum: nombreSeuil,
       image: image.trim(),
+      photo,
     });
 
   const creerCategorie = async () => {
@@ -168,17 +204,66 @@ export default function FormulaireAliment({
       <div>
         <span className="mb-1 block text-sm font-medium text-slate-600">Image</span>
         <div className="flex items-center gap-3">
-          <ImageAliment chemin={`/images/aliments/${image.trim() || 'defaut.png'}`} className="h-16 w-16" />
-          <input
-            value={image}
-            onChange={(evenement) => setImage(evenement.target.value)}
-            placeholder="thon.png"
-            autoCapitalize="none"
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2"
-          />
+          {apercu ? (
+            <img src={apercu} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <ImageAliment
+              chemin={`/images/aliments/${image.trim() || 'defaut.png'}`}
+              className="h-16 w-16"
+            />
+          )}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => refAppareil.current.click()}
+              disabled={occupe}
+              className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+            >
+              <Camera size={16} /> Photo
+            </button>
+            <button
+              onClick={() => refGalerie.current.click()}
+              disabled={occupe}
+              className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+            >
+              <ImagePlus size={16} /> Galerie
+            </button>
+            {apercu && (
+              <button
+                onClick={retirerPhoto}
+                className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+              >
+                Retirer
+              </button>
+            )}
+          </div>
         </div>
+        <input
+          ref={refAppareil}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={choisirPhoto}
+        />
+        <input ref={refGalerie} type="file" accept="image/*" hidden onChange={choisirPhoto} />
+        {erreurPhoto && <p className="mt-1 text-sm text-red-600">{erreurPhoto}</p>}
+
+        {!apercu && (
+          <label className="mt-2 block">
+            <span className="mb-1 block text-xs text-slate-400">
+              Ou le nom d'un fichier déjà présent sur le serveur
+            </span>
+            <input
+              value={image}
+              onChange={(evenement) => setImage(evenement.target.value)}
+              placeholder="thon.png"
+              autoCapitalize="none"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+        )}
         <p className="mt-1 text-xs text-slate-400">
-          Nom d'un fichier du dossier des images du serveur. Sans fichier, l'image par défaut s'affiche.
+          Sans image, l'image par défaut s'affiche. La photo est réduite avant l'envoi.
         </p>
       </div>
 

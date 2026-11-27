@@ -4,8 +4,14 @@ import { ArrowLeft, Plus, Search } from 'lucide-react';
 import { messageErreur } from '../../api/client.js';
 import { creerCategorie, lireCategories } from '../../api/categories.js';
 import { lireCompartiments } from '../../api/compartiments.js';
-import { creerAliment, lireDictionnaire, modifierAliment } from '../../api/dictionnaire.js';
+import {
+  creerAliment,
+  lireDictionnaire,
+  modifierAliment,
+  televerserImage,
+} from '../../api/dictionnaire.js';
 import ImageAliment from '../../components/ImageAliment.jsx';
+import useMessageTemporaire from '../../hooks/useMessageTemporaire.js';
 import FormulaireAliment from '../components/FormulaireAliment.jsx';
 import { nomFichier, normaliser } from '../../utils/texte.js';
 
@@ -23,7 +29,7 @@ export default function Dictionnaire() {
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState('');
   const [erreurFormulaire, setErreurFormulaire] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, afficherMessage, effacerMessage] = useMessageTemporaire();
 
   useEffect(() => {
     Promise.all([lireDictionnaire(), lireCategories(), lireCompartiments()])
@@ -44,7 +50,7 @@ export default function Dictionnaire() {
   }, [aliments, recherche, filtre]);
 
   const ouvrir = (nouveauMode) => {
-    setMessage('');
+    effacerMessage();
     setErreurFormulaire('');
     setMode(nouveauMode);
   };
@@ -59,24 +65,21 @@ export default function Dictionnaire() {
     setOccupe(true);
     setErreurFormulaire('');
     try {
+      let aliment;
+      let texte;
+
       if (mode === 'creer') {
-        let cree = await creerAliment({
+        aliment = await creerAliment({
           nom: donnees.nom,
           idCategorie: donnees.idCategorie,
           seuilMinimum: donnees.seuilMinimum,
         });
-        let texte = `« ${cree.nom} » ajouté au dictionnaire.`;
-        // L'image se règle dans un second temps
-        if (donnees.image) {
-          try {
-            cree = await modifierAliment(cree.id, { image: donnees.image });
-          } catch (e) {
-            texte = `« ${cree.nom} » est créé, mais son image n'a pas pu être réglée : ${messageErreur(e)}`;
-          }
-        }
-        setAliments((liste) => triParNom([...liste, cree]));
-        setMessage(texte);
+        texte = `« ${aliment.nom} » ajouté au dictionnaire.`;
+        // L'aliment existe déjà : on l'affiche tout de suite, l'image vient ensuite
+        setAliments((liste) => triParNom([...liste, aliment]));
       } else {
+        aliment = mode;
+        texte = `« ${mode.nom} » mis à jour.`;
         // On n'envoie que ce qui a changé
         const modifications = {};
         if (donnees.seuilMinimum !== mode.seuilMinimum) {
@@ -86,15 +89,24 @@ export default function Dictionnaire() {
         if (donnees.idCategorie !== categorieAvant) {
           modifications.idCategorie = donnees.idCategorie;
         }
-        if (donnees.image && donnees.image !== nomFichier(mode.image)) {
-          modifications.image = donnees.image;
-        }
         if (Object.keys(modifications).length > 0) {
-          const misAJour = await modifierAliment(mode.id, modifications);
-          setAliments((liste) => liste.map((a) => (a.id === misAJour.id ? misAJour : a)));
-          setMessage(`« ${misAJour.nom} » mis à jour.`);
+          aliment = await modifierAliment(mode.id, modifications);
         }
       }
+
+      // L'image : la photo a la priorité, sinon le nom d'un fichier du serveur
+      try {
+        if (donnees.photo) {
+          aliment = await televerserImage(aliment.id, donnees.photo);
+        } else if (donnees.image && donnees.image !== nomFichier(aliment.image)) {
+          aliment = await modifierAliment(aliment.id, { image: donnees.image });
+        }
+      } catch (e) {
+        texte = `« ${aliment.nom} » est enregistré, mais son image n'a pas pu être réglée : ${messageErreur(e)}`;
+      }
+
+      setAliments((liste) => triParNom(liste.map((a) => (a.id === aliment.id ? aliment : a))));
+      afficherMessage(texte);
       setMode(null);
     } catch (e) {
       setErreurFormulaire(messageErreur(e));
@@ -139,7 +151,15 @@ export default function Dictionnaire() {
         </button>
       </div>
 
-      {message && <p className="rounded-lg bg-emerald-50 p-2 text-sm text-emerald-800">{message}</p>}
+      {message && (
+        <button
+          onClick={effacerMessage}
+          aria-live="polite"
+          className="w-full rounded-lg bg-emerald-50 p-2 text-left text-sm text-emerald-800"
+        >
+          {message}
+        </button>
+      )}
       {erreur && <p className="text-sm text-red-600">{erreur}</p>}
 
       <label className="relative block">
